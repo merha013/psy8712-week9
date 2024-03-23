@@ -7,26 +7,32 @@ library(rvest)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Data Import and Cleaning
-rstats_page <- read_html("https://www.reddit.com/r/rstats/")
-rstats_elements <- html_elements(reddit_page, ".newsList a") # figure out how to get good xpath
-rstats_links <- html_attr(reddit_elements, "href")
-rstats_text <- html_text(reddit_elements)
 
+# Method 1
+# this does not give me one months worth of data
+data <- fromJSON("https://www.reddit.com/r/rstats/.json")
+post_titles <- data$data$children$data$title
+number_upvotes <- data$data$children$data$ups
+number_comments <- data$data$children$data$num_comment
 
-rstats_tbl <- tibble(
-  link_title = rstats_text,
-  link_url = rstats_links
+rstats_tbl1 <- tibble(
+  post = post_titles,
+  upvotes = number_upvotes,
+  comments = number_comments
 )
 
-View(rstats_tbl)
+# Method 2
+# this gives me a months worth of data but is hard to get upvotes info
+info <- find_thread_urls("rstats", period = "month")
+thread_details <- get_thread_content(info$url) # to try to get upvotes...
 
-# posts <- contains the post title text of at least a months worth of posts on 
+rstats_tbl2 <- tibble(
+  post = info$title,
+  # upvotes = thread_details$data$children$data$ups,
+  comments = info$comments
+)
 
-# upvotes <- the number of upvotes each thread has received
 
-# comments <- the number of comments each post has received
-  
-  
 # Visualization
 ## Display an appropriate tidyverse visualization of the relationship between upvotes and comments
   
@@ -38,3 +44,11 @@ cor.test()
 
 
 # Publication
+
+
+
+# use the following if there is no API to use
+rstats_page <- read_html("https://www.reddit.com/r/rstats/.json")
+rstats_elements <- html_elements(reddit_page, ".newsList a") # figure out how to get good xpath ... also, for no API
+rstats_links <- html_attr(reddit_elements, "href") # for no API
+rstats_text <- html_text(reddit_elements) # for no API
