@@ -24,31 +24,38 @@ rstats_tbl1 <- tibble(
 # Method 2
 # this gives me a months worth of data but is hard to get upvotes info
 info <- find_thread_urls("rstats", period = "month")
-thread_details <- get_thread_content(info$url) # to try to get upvotes...
+urls <- info$url
+thread_details <- get_thread_content(urls) 
+# done to get access to upvote numbers, which weren't provided in 'info'
 
 rstats_tbl2 <- tibble(
   post = info$title,
-  # upvotes = thread_details$data$children$data$ups,
+  upvotes = thread_details$threads$upvotes,
   comments = info$comments
 )
 
-
 # Visualization
-## Display an appropriate tidyverse visualization of the relationship between upvotes and comments
-  
+rstats_tbl2 %>%
+  ggplot(aes(x=upvotes, y = comments)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "maroon", fill = "gold") +
+  labs(title = "Relationship Between Upvotes and Comments",
+       x = "Number of Upvotes",
+       y = "Number of Comments") 
+  # coord_cartesian(xlim = c(0, 50), ylim = c(0, 50))
+  # I considered adding the above line to better see the values less than 15,
+  # but I liked seeing and showing the outliers for this as well. You still
+  # get a good idea of what that data would look like zoomed in from this
+  # level. Also, the coord_cartesian() function would ensure the regression 
+  # line was not affected by narrowing the range of the x and y axis.
   
 # Analysis
-## calculate and display the correlation between upvotes and comments, as well as the p-value associate diwth that relationship
-cor()
-cor.test()
-
+analysis <- cor.test(rstats_tbl2$upvotes, rstats_tbl2$comments)
+(correlation <- analysis$estimate)  # correlation value
+(p_value <- analysis$p.value) # p-value
+(significance <- if(p.value>0.05){"was not"}else{"was"})
+(df <- analysis$parameter)
 
 # Publication
-
-
-
-# use the following if there is no API to use
-rstats_page <- read_html("https://www.reddit.com/r/rstats/.json")
-rstats_elements <- html_elements(reddit_page, ".newsList a") # figure out how to get good xpath ... also, for no API
-rstats_links <- html_attr(reddit_elements, "href") # for no API
-rstats_text <- html_text(reddit_elements) # for no API
+cat(sprintf("The correlation between upvotes and comments was r(%d) = %.2f, p = %.2f. This test %s statistically significant.", df, correlation, p_value, significance))
+# still need to remove the leading 0 in correlation and p-value!
