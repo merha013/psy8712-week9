@@ -1,23 +1,19 @@
 # Script Settings and Resources
 library(tidyverse)
-library(httr)
-library(jsonlite)
 library(rvest)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Data Import and Cleaning
-urls <- c(
+urls <- c( # defines the four websites to pull from
   "https://www.cnbc.com/business/",
   "https://www.cnbc.com/investing/",
   "https://www.cnbc.com/tech/",
   "https://www.cnbc.com/politics/"
 )
 
-# Initialize an empty list to store data from each section
-cnbc_list <- list()
+cnbc_list <- list() # Initialize an empty list to store data from each section
 
-# Loop over each section URL
-for(url in urls) {
+for(url in urls) { # Loop over each section URL
   # Read the HTML content of the webpage
   webpage <- read_html(url)
   # Scrape headlines
@@ -39,26 +35,34 @@ for(url in urls) {
   cnbc_list[[length(cnbc_list) +1]] <- cnbc_data
 }
 
-# Combine data from all sections into a single data frame
-cnbc_tbl <- do.call(rbind, cnbc_list)
+cnbc_tbl <- do.call(rbind, cnbc_list) # Combine data into a single data frame
 
 # Visualization
 cnbc_tbl %>%
   ggplot(aes(x=source, y = length, color = source)) + # I like adding color.
   geom_boxplot() + # allows you to compare means and standard deviations
-  geom_jitter() + # adds a depiction of where the real data is
+  geom_jitter() + # adds a depiction of the real data
   labs(title = "Relationship Between Source and Headline Length",
        x = "Source",
        y = "Headline Length") +
-  theme_bw()
+  theme_bw() # just picking a theme that looks good
 
 # Analysis
 analysis_cnbc <- aov(length ~ source, cnbc_tbl)
-summary(analysis_cnbc)
-f_cnbc <- analysis_cnbc$F.value # doesn't work. need to manually pull
-p_value_cnbc <- analysis_cnbc$p.value # doesn't work. need to manually pull
-df_cnbc <- analysis_cnbc$parameter # doesn't work. need to manually pull
+f_value_cnbc <- summary(analysis_cnbc)[[1]]$"F value"
+p_value_cnbc <- str_remove(prettyNum(
+  summary(analysis_cnbc)[[1]]$"Pr(>F)"[1], digits=2), "^0")
+  # This gets rid of leading 0 and keeps only 2 digits, but it also
+  # turns it into a character object instead of numeric, which isn't ideal/
+  # I'm also having trouble with it only keeping the first two digits after .
+df_src_cnbc <- summary(analysis_cnbc)[[1]]$"Df"[1]
+df_res_cnbc <- summary(analysis_cnbc)[[1]]$"Df"[2]
 significance_cnbc <- if(p_value_cnbc>0.05){"was not"}else{"was"}
 
 # Publication
-cat(sprintf("The results of an ANOVA comparing lengths across sources was F(%d)= %s, p = %.2f. This test %s statistically significant.", df_cnbc, f_cnbc, p_value_cnbc, significance_cnbc))
+# The results of an ANOVA comparing lengths across sources was F(3, 130) = 3.34, p = .021. This test was statistically significant.
+
+cat(sprintf("The results of an ANOVA comparing lengths across sources was F(%d, %d) = %.2f, p = %s. This test %s statistically significant.", df_src_cnbc, df_res_cnbc, f_value_cnbc, str_remove(p_value_cnbc, "^0"), significance_cnbc))
+  # The value for this has changed over the multiple times I've run it
+  # due to new and updated data being pulled from the website.
+  # I'm also not sure why this is printing two lines of repeated output.
