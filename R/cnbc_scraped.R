@@ -49,20 +49,18 @@ cnbc_tbl %>%
 
 # Analysis
 analysis_cnbc <- aov(length ~ source, cnbc_tbl)
-f_value_cnbc <- summary(analysis_cnbc)[[1]]$"F value"
-p_value_cnbc <- str_remove(prettyNum(
-  summary(analysis_cnbc)[[1]]$"Pr(>F)"[1], digits=2), "^0")
+(f_value_cnbc <- summary(analysis_cnbc)[[1]]$"F value")
+(p_value_cnbc <- str_remove(formatC(
+  summary(analysis_cnbc)[[1]]$"Pr(>F)"[1], format = 'f', digits=2), "^0"))
   # This gets rid of leading 0 and keeps only 2 digits, but it also
-  # turns it into a character object instead of numeric, which isn't ideal/
-  # I'm also having trouble with it only keeping the first two digits after .
+  # turns it into a character object instead of numeric, which isn't ideal.
 df_src_cnbc <- summary(analysis_cnbc)[[1]]$"Df"[1]
 df_res_cnbc <- summary(analysis_cnbc)[[1]]$"Df"[2]
 significance_cnbc <- if(p_value_cnbc>0.05){"was not"}else{"was"}
 
 # Publication
-# The results of an ANOVA comparing lengths across sources was F(3, 130) = 3.34, p = .021. This test was statistically significant.
+# The results of an ANOVA comparing lengths across sources was F(3, 130) = 1.06, p = .37. This test was statistically significant.
 
 cat(sprintf("The results of an ANOVA comparing lengths across sources was F(%d, %d) = %.2f, p = %s. This test %s statistically significant.", df_src_cnbc, df_res_cnbc, f_value_cnbc, str_remove(p_value_cnbc, "^0"), significance_cnbc))
   # The value for this has changed over the multiple times I've run it
   # due to new and updated data being pulled from the website.
-  # I'm also not sure why this is printing two lines of repeated output.

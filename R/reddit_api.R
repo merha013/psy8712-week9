@@ -30,23 +30,24 @@ rstats_tbl %>%
   # the outliers for this as well. You still get a good idea of what that 
   # data would look like zoomed in from this level. Also, the coord_cartesian()
   # function would ensure the regression line was not affected by narrowing 
-  # the range of the x and y axis.
+  # the range of the x and y axis. The data also keeps changing. So, I think
+  # the full view is better to avoid missing anything.
   
 # Analysis
 analysis <- cor.test(rstats_tbl$upvotes, rstats_tbl$comments)
-(correlation <- str_remove(formatC(analysis$estimate, digits=2), "^0"))  
+(correlation <- str_remove(formatC(analysis$estimate, format='f', digits=2), "^0"))  
   # This gets rid of leading 0 and keeps only 2 digits, but it also turns
   # it into a character object instead of numeric, which isn't ideal.
   # Putting the whole line in parenthesis displays it.
-(p_value <- str_remove(prettyNum(analysis$p.value, digits=2), "^0")) 
-  # This created a p-value and removed the extra 0. 
-  # formatC() wasn't working for this value. So, I used prettyNum() instead.
+(p_value <- str_remove(formatC(analysis$p.value, format='f', digits=2), "^0")) 
+  # This gets rid of leading 0 and keeps only 2 digits, but it also turns
+  # it into a character object instead of numeric, which isn't ideal.
   # Putting the whole line in parenthesis displays it.
 significance <- if(p_value>0.05){"was not"}else{"was"}
 df <- analysis$parameter # degrees of freedom has no digits after the decimal
 
 # Publication
-# The correlation between upvotes and comments was r(138) = .57, p = 2.4e-13. This test was not statistically significant.
+# The correlation between upvotes and comments was r(122) = .48, p = .00. This test was statistically significant.
 
 cat(sprintf("The correlation between upvotes and comments was r(%d) = %s, p = %s. This test %s statistically significant.", df, correlation, p_value, significance)) 
   # The value for this has changed over the multiple times I've run it
